@@ -1,0 +1,81 @@
+<div style="@ComputeStyle()">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required RenderFragment ChildContent { get; init; }
+
+    private readonly Dictionary<string, string> _style = new();
+
+    private string? GetStyleProperty(string key) => _style.ContainsKey(key)
+        ? _style[key]
+        : null;
+
+    private void InitializeStyleProperty(string key, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            _style.Remove(key);
+        else
+            _style[key] = value.Trim();
+    }
+
+    public Grid()
+    {
+        InitializeStyleProperty("display", "grid");
+    }
+
+    [Parameter]
+    public string? Rows
+    {
+        get => GetStyleProperty("grid-template-rows");
+        init => InitializeStyleProperty("grid-template-rows", value);
+    }
+
+    [Parameter]
+    public string? Columns
+    {
+        get => GetStyleProperty("grid-template-columns");
+        init => InitializeStyleProperty("grid-template-columns", value);
+    }
+
+    [Parameter]
+    public string? Gap
+    {
+        get => GetStyleProperty("gap");
+        init => InitializeStyleProperty("gap", value);
+    }
+
+    [Parameter]
+    public string? Flow
+    {
+        get => GetStyleProperty("grid-auto-flow");
+        init => InitializeStyleProperty("grid-auto-flow", value);
+    }
+
+    private string ComputeStyle()
+    {
+        var length = _style.Sum(kv => kv.Key.Length + kv.Value.Length + 2);
+
+        return string.Create(length, _style, (buffer, style) =>
+        {
+            var i = 0;
+            foreach (var key in style.Keys)
+            {
+                var value = style[key];
+                for (var k = 0; k < key.Length; k++)
+                {
+                    buffer[i + k] = key[k];
+                }
+                i += key.Length;
+                buffer[i++] = ':';
+                for (var v = 0; v < value.Length; v++)
+                {
+                    buffer[i + v] = value[v];
+                }
+                i += value.Length;
+                buffer[i++] = ';';
+            }
+        });
+    }
+}
